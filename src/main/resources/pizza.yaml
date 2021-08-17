@@ -1,0 +1,336 @@
+openapi: 3.0.1
+info:
+  title: Pizza delivery API
+  description: Extension of [Pizzeria API](https://order-pizza-api.herokuapp.com/api/ui/)
+  version: 1.0.0
+servers:
+- url: /
+tags:
+- name: constraints
+- name: users
+- name: user orders
+paths:
+  /constraints:
+    get:
+      tags:
+      - constraints
+      summary: Return order constraints.
+      description: |
+        Return order constraints. Only orders with specified allowed values can be created.
+      operationId: getConstraints
+      responses:
+        200:
+          description: Constraints.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Constraints_get'
+  /users:
+    get:
+      tags:
+      - users
+      summary: Return list of all users
+      description: |
+        Return list of all users.
+      operationId: getAllUsers
+      responses:
+        200:
+          description: Collection of users.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User_get'
+    post:
+      tags:
+      - users
+      summary: Add user.
+      description: |
+        Add user.
+      operationId: addUser
+      requestBody:
+        description: User to add. Property `name` should be unique and not empty.
+        content:
+          '*/*':
+            schema:
+              $ref: '#/components/schemas/User_post'
+        required: false
+      responses:
+        201:
+          description: Created user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User_get'
+        422:
+          description: User `name` property is not unique or emtpy.
+          content: {}
+      x-codegen-request-body-name: User
+  /users/{id}:
+    get:
+      tags:
+      - users
+      summary: Return user by id.
+      description: |
+        Return user by id.
+      operationId: getUserById
+      parameters:
+      - name: id
+        in: path
+        description: User id
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        200:
+          description: Found user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User_get'
+        400:
+          description: Invalid id.
+          content: {}
+        404:
+          description: User not found.
+          content: {}
+    put:
+      tags:
+      - users
+      summary: Update user.
+      description: |
+        Update user.
+      operationId: updateUser
+      parameters:
+      - name: id
+        in: path
+        description: User id.
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        description: User to add. Property `name` should be unique and not empty.
+        content:
+          '*/*':
+            schema:
+              $ref: '#/components/schemas/User_post'
+        required: false
+      responses:
+        201:
+          description: Updated user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User_get'
+        404:
+          description: User not found.
+          content: {}
+        422:
+          description: User `name` property is not unique or emtpy.
+          content: {}
+      x-codegen-request-body-name: User
+  /users/{id}/orders:
+    get:
+      tags:
+      - user orders
+      summary: Return orders for user.
+      description: |
+        Return orders for given user id.
+      operationId: getOrders
+      parameters:
+      - name: id
+        in: path
+        description: User id
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        200:
+          description: Collection of orders.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order_get'
+        400:
+          description: Invalid id.
+          content: {}
+        404:
+          description: User not found.
+          content: {}
+        424:
+          description: Failed retrieving orders.
+          content: {}
+    post:
+      tags:
+      - user orders
+      summary: Add order for user.
+      description: |
+        Add order for user. Allowed order values can be retrieved in [/constraints](#/constraints/getConstraints)
+      operationId: addOrder
+      parameters:
+      - name: id
+        in: path
+        description: User id
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        description: Order to add.
+        content:
+          '*/*':
+            schema:
+              $ref: '#/components/schemas/Order_post'
+        required: false
+      responses:
+        201:
+          description: Created user order.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order_get'
+        400:
+          description: Invalid id.
+          content: {}
+        404:
+          description: User not found.
+          content: {}
+        422:
+          description: Invalid order values.
+          content: {}
+        424:
+          description: Failed retrieving orders.
+          content: {}
+      x-codegen-request-body-name: Order
+  /users/{id}/orders/{orderId}:
+    delete:
+      tags:
+      - user orders
+      summary: Delete order for user.
+      description: |
+        Delete order for user.
+      operationId: deleteOrder
+      parameters:
+      - name: id
+        in: path
+        description: User id
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: orderId
+        in: path
+        description: Order id
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        204:
+          description: Order was deleted or does not exist.
+          content: {}
+        400:
+          description: Invalid user or order id.
+          content: {}
+        404:
+          description: User not found.
+          content: {}
+        424:
+          description: Failed deleting order.
+          content: {}
+components:
+  schemas:
+    Constraints_get:
+      type: object
+      properties:
+        flavor:
+          type: array
+          description: Allowed flavor values.
+          example:
+          - HAWAII
+          - REGINA
+          - QUATTRO-FORMAGGI
+          items:
+            type: string
+        crust:
+          type: array
+          description: Allowed crust values.
+          example:
+          - THIN
+          items:
+            type: string
+        size:
+          type: array
+          description: Allowed size values.
+          example:
+          - L
+          - M
+          items:
+            type: string
+    User_get:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Generated id.
+          format: int64
+          example: 7
+        name:
+          type: string
+          description: User name.
+          example: Pizza Lover
+    User_post:
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          type: string
+          description: Has to be unique and not empty.
+          example: Pizza Lover
+    Order_get:
+      type: object
+      properties:
+        orderId:
+          type: integer
+          description: Order id.
+          format: int64
+          example: 18
+        flavour:
+          type: string
+          description: Pizza flavor
+          example: HAWAII
+        crust:
+          type: string
+          description: Pizza crust.
+          example: THIN
+        size:
+          type: string
+          description: Pizza size.
+          example: L
+        tableNumber:
+          type: integer
+          description: Order table number. Always greater than 20000 to singal "takeaway"
+            order.
+          example: 20008
+    Order_post:
+      type: object
+      properties:
+        flavour:
+          type: string
+          description: Pizza flavor.
+          example: HAWAII
+        crust:
+          type: string
+          description: Pizza crust.
+          example: THIN
+        size:
+          type: string
+          description: Pizza size.
+          example: L
